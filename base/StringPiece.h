@@ -193,6 +193,18 @@ namespace muduo
 	};
 }
 
+#ifdef HAVE_TYPE_TRAITS
+template<> struct __type_traits<muduo::StringPiece>
+{
+	typedef __true_type has_trivial_default_constructor;
+	typedef __true_type has_trivial_copy_constructor;
+	typedef __true_type has_trivial_assignment_operator;
+	typedef __true_type has_trivial_destructor;
+	typedef __true_type is_POD_type;
+};
+#endif
 
+// allow StringPiece to be logged
+std::ostream& operator<<(std::ostream& o,const muduo::StringPiece& piece);
 
 #endif
