@@ -115,5 +115,90 @@ namespace muduo
 			void removeChannel(Channel* channel);
 			bool hasChannel(Channel* channel);
 			
+			void assertInLoopThread()
+			{
+				if(!isInLoopThread())
+				{
+					abortNotInLoopThread();
+				}
+			}
+			
+			bool isInLoopThread() const
+			{
+				return threadId_ == CurrentThread::tid();
+			}
+			
+			bool eventHandling() const
+			{
+				return eventHandling_;
+			}
+			
+			void setContext(const boost::any& context)
+			{
+				context_ = context;
+			}
+			
+			const boost::any& getContext()
+			{
+				return context_;
+			}
+			
+			boost::any* getMutableContext()
+			{
+				return &context_;
+			}
+			
+			static EventLoop* getEventLoopOfCurrentThread()
+			
+		private:
+			void abortNotInLoopThread();
+			
+			void handleRead(); // waked up
+			
+			void doPendingFunctors();
+			
+			void printActiveChannels() const; // DEBUG
+			
+			typedef std::vector<Channel*> ChannelList;
+			
+			bool looping_; /*atomatic*/
+			
+			bool quit_;/* atomic and shared between threads, okay on x86, I guess. */
+			
+			bool eventHandling_; /* atomic */
+			
+			bool callingPendingFunctors_; /* atomic */
+			
+			int64_t interation_;
+			
+			const pid_t thread_;
+			
+			Timestamp pollReturnTime_;
+			
+			boost::scoped_ptr<Poller> poller_;
+			
+			boost::scoped_ptr<TimerQueue> timerQueue_;
+			
+			int wakeupFd_;
+			
+			// unlike in TimerQueue, which is an internal class,
+			// we don't expose Channel to client.
+			boost::scoped_ptr<Channel> wakeupChannel_;
+			boost::any context_;
+			
+			// scratch variables
+			ChannelList activeChannels_;
+			
+			Channel* currentActiveChannel_;
+			
+			mutable MutexLock mutex_;
+			std::vector<Functor> pendingFunctors_; // @GuardedBy mutex_
+		};
+	}
+}
+			
+			
+			
+			
 			
 #endif
